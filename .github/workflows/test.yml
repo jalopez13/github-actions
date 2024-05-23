@@ -1,0 +1,48 @@
+name: CI TESTS
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Test:
+    name: RUN CI TESTS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: CHECKOUT CODE
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SETUP NODE
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and Run Yarn
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install # will run `yarn install` command
+
+      - name: SET NX SHAS
+        uses: nrwl/nx-set-shas@v4
+
+      - name: RUN LINT
+        env:
+          NX_BASE: ${{ env.NX_BASE }}
+          NX_HEAD: ${{ env.NX_HEAD }}
+        run: npx nx affected -t lint --base=$NX_BASE --head=$NX_HEAD
+
+      - name: RUN TEST
+        env:
+          NX_BASE: ${{ env.NX_BASE }}
+          NX_HEAD: ${{ env.NX_HEAD }}
+        run: npx nx affected -t build-test --base=$NX_BASE --head=$NX_HEAD
+
+      - name: RUN BUILD
+        env:
+          NX_BASE: ${{ env.NX_BASE }}
+          NX_HEAD: ${{ env.NX_HEAD }}
+        run: npx nx affected -t build-dev --base=$NX_BASE --head=$NX_HEAD
